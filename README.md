@@ -38,8 +38,6 @@ Roll No: MGP21NMC012
 
 Mail Id: apk.inmca2126@saintgits.org
 
-Mobile No: 8590308321
-
 Project Guide: Ms Vidya N
 
 
