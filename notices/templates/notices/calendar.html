@@ -1,0 +1,75 @@
+{% extends 'notices/base.html' %}
+{% load static %}
+
+{% block stylesheet %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+<style>
+    /* Styling to make the calendar fit our dark glass theme */
+    .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+        border-color: rgba(255,255,255,0.1);
+    }
+    .fc-col-header-cell-cushion, .fc-daygrid-day-number {
+        color: white;
+        text-decoration: none;
+    }
+    .fc-toolbar-title {
+        color: white;
+        font-weight: 800;
+    }
+    .fc .fc-button-primary {
+        background-color: var(--portal-blue);
+        border-color: var(--portal-blue);
+        border-radius: 12px;
+        font-weight: 700;
+    }
+    .fc .fc-button-primary:not(:disabled).fc-button-active, .fc .fc-button-primary:not(:disabled):active {
+        background-color: #0056b3;
+    }
+    .fc-event {
+        border-radius: 6px;
+        padding: 2px 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .fc-event:hover {
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mb-5 animate-fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-white font-weight-800"><i class="far fa-calendar-alt mr-2"></i> Campus Calendar</h2>
+    </div>
+
+    <div class="card glass-card border-0 shadow-sm p-4" style="border-radius: 24px;">
+        <div id='calendar'></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            height: 700,
+            events: "{% url 'notices:calendar_events' %}", // Connects to your JSON view!
+            eventClick: function(info) {
+                // Allows users to click an event to be redirected to the notice/poll
+                if (info.event.url) {
+                    window.open(info.event.url, "_self");
+                    info.jsEvent.preventDefault();
+                }
+            }
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}

@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from datetime import timedelta
 import os
+from django.core.mail import EmailMessage
 
 # ==========================================
 # 1. NEW: User Profile (To store Department)
@@ -144,7 +145,7 @@ class Notification(models.Model):
 @receiver(post_save, sender=Notice)
 def create_notice_notification(sender, instance, created, **kwargs):
     if created:
-        # STAFF -> ADMIN
+        # STAFF -> ADMIN (In-App Notification Only)
         admins = User.objects.filter(is_superuser=True)
         notifications = [
             Notification(
@@ -159,14 +160,18 @@ def create_notice_notification(sender, instance, created, **kwargs):
         # ADMIN -> STUDENTS (FILTERED BY DEPARTMENT)
         students = User.objects.filter(is_staff=False, is_superuser=False)
         
-        # Only notify students in the target department
+        # Only target students in the correct department
         if instance.target_department != 'All':
             students = students.filter(profile__department=instance.target_department)
         
         deadline_info = ""
+        email_deadline = "No specific deadline."
+        
         if instance.expires_at:
             deadline_info = f" | Deadline: {instance.expires_at.strftime('%d %b, %H:%M')}"
+            email_deadline = instance.expires_at.strftime('%A, %d %B %Y at %I:%M %p') # Formats nicely for email
         
+        # 1. CREATE IN-APP NOTIFICATIONS
         notifications = [
             Notification(
                 recipient=student,
@@ -176,5 +181,104 @@ def create_notice_notification(sender, instance, created, **kwargs):
         ]
         Notification.objects.bulk_create(notifications)
         
+        # 2. SEND THE AUTOMATED EMAIL
+        # Gather all valid email addresses from the targeted students
+        student_emails = [student.email for student in students if student.email]
+        
+        if student_emails:
+            subject = f"New Campus Notice [{instance.target_department}]: {instance.title}"
+            body = f"""Hello,
+
+A new notice has been posted for the {instance.target_department} department.
+
+TITLE: {instance.title}
+DEADLINE: {email_deadline}
+
+MESSAGE:
+{instance.message}
+
+Please log in to the Campus Noticeboard portal to view any attachments and officially acknowledge that you have read this notice.
+
+Regards,
+Admin"""
+            
+            try:
+                # We use BCC so students don't see everyone else's email address
+                email = EmailMessage(
+                    subject=subject,
+                    body=body,
+                    from_email=settings.EMAIL_HOST_USER,
+                    bcc=student_emails
+                )
+                email.send(fail_silently=True)
+            except Exception as e:
+                print(f"Email failed to send: {e}")
+        
+        # 3. MARK AS SENT
         # Use update to avoid re-triggering signals
         Notice.objects.filter(id=instance.id).update(notifications_sent=True)
+# ==========================================
+# 6. Poll & Attendance System
+# ==========================================
+class Poll(models.Model):
+    question = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    
+    # Target specific departments for the poll
+    target_department = models.CharField(
+        max_length=10, 
+        choices=[
+            ('All', 'All Departments'),
+            ('MCA', 'MCA'),
+            ('BTech', 'BTech'),
+            ('MBA', 'MBA'),
+        ], 
+        default='All'
+    )
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Poll: {self.question}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+class PollResponse(models.Model):
+    CHOICES = [('Yes', 'Yes'), ('No', 'No')]
+    poll = models.ForeignKey(Poll, related_name='responses', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    choice = models.CharField(max_length=5, choices=CHOICES)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('poll', 'user') # Prevents double voting
+
+# ==========================================
+# 7. Notification Signal for New Polls
+# ==========================================
+@receiver(post_save, sender=Poll)
+def create_poll_notification(sender, instance, created, **kwargs):
+    if created:
+        students = User.objects.filter(is_staff=False, is_superuser=False)
+        if instance.target_department != 'All':
+            students = students.filter(profile__department=instance.target_department)
+            
+        notifications = [
+            Notification(
+                recipient=student,
+                message=f"New Poll: {instance.question} (Please respond Yes/No)",
+            ) for student in students
+        ]
+        Notification.objects.bulk_create(notifications)
+
+# ==========================================
+# 8. Admin Link Placeholder (Dummy Model)
+# ==========================================
+class AnalyticsLink(models.Model):
+    class Meta:
+        managed = False  # Tells Django NOT to create a database table
+        verbose_name = "📊 View Analytics Dashboard"
+        verbose_name_plural = "📊 View Analytics Dashboard"

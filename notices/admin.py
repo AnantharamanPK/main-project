@@ -2,7 +2,9 @@
 from django.contrib import admin
 from django.utils import timezone
 from django.contrib.auth import get_user_model 
-from .models import Notice, NoticeReadStatus, DirectMessage, Profile, Notification
+from django.utils.html import format_html # Added for formatting Poll results
+from django.shortcuts import redirect # Added for the Analytics redirect
+from .models import Notice, NoticeReadStatus, DirectMessage, Profile, Notification, Poll, PollResponse, AnalyticsLink # Added AnalyticsLink
 
 # ==========================================
 # 1. Profile Admin (To manage departments)
@@ -123,3 +125,63 @@ class DirectMessageAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 admin.site.register(Notification)
+
+# ==========================================
+# 5. Poll & Attendance Admin
+# ==========================================
+# ==========================================
+# 5. Poll & Attendance Admin
+# ==========================================
+@admin.register(Poll)
+class PollAdmin(admin.ModelAdmin):
+    list_display = ('question', 'target_department', 'get_yes_count', 'get_no_count', 'is_active', 'created_at')
+    list_filter = ('target_department', 'is_active', 'created_at')
+    search_fields = ('question', 'description')
+    
+    # NEW: Added 'created_by' so it displays as plain text, not a dropdown
+    readonly_fields = ('created_by', 'get_detailed_results')
+
+    # NEW: Automatically set the logged-in admin as the creator
+    def save_model(self, request, obj, form, change):
+        if not obj.pk: # If this is a brand new poll being created
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_yes_count(self, obj):
+        return obj.responses.filter(choice='Yes').count()
+    get_yes_count.short_description = '✅ Yes'
+
+    def get_no_count(self, obj):
+        return obj.responses.filter(choice='No').count()
+    get_no_count.short_description = '❌ No'
+
+    def get_detailed_results(self, obj):
+        responses = obj.responses.select_related('user').all()
+        if not responses: 
+            return "No responses yet."
+        
+        html = "<table style='width:100%; max-width: 400px; border:1px solid #ccc; text-align: left;'>"
+        html += "<tr><th style='padding: 8px; border-bottom: 1px solid #ccc;'>Student</th><th style='padding: 8px; border-bottom: 1px solid #ccc;'>Response</th></tr>"
+        
+        for r in responses:
+            color = "green" if r.choice == 'Yes' else "red"
+            html += f"<tr><td style='padding: 8px; border-bottom: 1px solid #eee;'>{r.user.username}</td><td style='color:{color}; font-weight:bold; padding: 8px; border-bottom: 1px solid #eee;'>{r.choice}</td></tr>"
+        
+        html += "</table>"
+        return format_html(html)
+    get_detailed_results.short_description = "Attendance Breakdown"
+
+admin.site.register(PollResponse)
+
+# ==========================================
+# 6. Analytics Dashboard Link (Dummy Model)
+# ==========================================
+@admin.register(AnalyticsLink)
+class AnalyticsLinkAdmin(admin.ModelAdmin):
+    def changelist_view(self, request, extra_context=None):
+        # When you click the link in the admin, instantly redirect to the analytics page
+        return redirect('notices:analytics')
+        
+    def has_add_permission(self, request):
+        # This removes the "+ Add" button so it just looks like a standard link
+        return False
