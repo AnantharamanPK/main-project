@@ -11,6 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
     {% block stylesheet %}{% endblock %}
     
     <style>
@@ -227,7 +229,11 @@
                 </div>
 
                 <ul class="navbar-nav ml-auto align-items-center mt-3 mt-lg-0">
-                    
+                    <li class="nav-item mr-3">
+    <a class="nav-link text-white" href="{% url 'notices:calendar' %}" style="font-weight: 600;">
+        <i class="far fa-calendar-alt mr-1"></i> Calendar
+    </a>
+</li>
                     <li class="nav-item dropdown mr-3">
                         <a class="nav-link text-white" href="#" id="notifDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 1.3rem; position: relative;">
                             🔔
@@ -289,9 +295,17 @@
                     </li>
 
                     {% if user.is_staff %}
-                        <li class="nav-item">
-                            <a href="{% url 'notices:new_notice' %}" class="btn btn-warning btn-nav-custom">+ Post Notice</a>
-                        </li>
+                        {% if request.resolver_match.url_name != 'analytics' %}
+                            <li class="nav-item mr-2">
+                                <a href="{% url 'notices:analytics' %}" class="btn btn-info btn-nav-custom text-white" style="background-color: var(--portal-blue); border-color: var(--portal-blue);">
+                                    <i class="fas fa-chart-pie mr-1"></i> Analytics
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a href="{% url 'notices:new_notice' %}" class="btn btn-warning btn-nav-custom">+ Post Notice</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                 </ul>
             </div>

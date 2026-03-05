@@ -10,7 +10,8 @@ from django.contrib import messages
 from django.db import transaction
 import urllib.parse 
 
-from .models import Notice, User, NoticeReadStatus, DirectMessage, Notification 
+# Added Poll and PollResponse to the imports
+from .models import Notice, User, NoticeReadStatus, DirectMessage, Notification, Poll, PollResponse 
 from .forms import NewNoticeForm
 
 # 1. MAIN LIST VIEW (Board filtered by Department)
@@ -65,6 +66,30 @@ class NoticeListView(LoginRequiredMixin, ListView):
                 student=user, 
                 is_read=False
             )
+
+            # ==========================================
+            # NEW: POLL LOGIC
+            # ==========================================
+            try:
+                user_dept = user.profile.department
+            except:
+                user_dept = 'All'
+            
+            # 1. Get active polls for this user's department (and 'All')
+            active_polls = Poll.objects.filter(
+                is_active=True, 
+                target_department__in=['All', user_dept]
+            )
+            context['active_polls'] = active_polls
+
+            # 2. Map out which polls this user has already answered
+            user_responses = PollResponse.objects.filter(
+                user=user, 
+                poll__in=active_polls
+            )
+            # Create a dictionary {poll_id: 'Yes'/'No'} for the template
+            context['user_poll_responses'] = {r.poll.id: r.choice for r in user_responses}
+            # ==========================================
         
         tag_queryset = Notice.objects.filter(tags__isnull=False).values_list('tags', flat=True)
         unique_tags = set()
@@ -273,3 +298,137 @@ def dismiss_direct_message(request, message_id):
         msg.is_read = True
         msg.save()
     return redirect('notices:home')
+
+
+# ==========================================
+# 14. NEW: SUBMIT POLL RESPONSE
+# ==========================================
+@login_required
+def submit_poll(request, poll_id):
+    if request.method == 'POST':
+        poll = get_object_or_404(Poll, id=poll_id, is_active=True)
+        choice = request.POST.get('choice')
+        
+        if choice in ['Yes', 'No']:
+            # Create or update the student's poll response
+            PollResponse.objects.update_or_create(
+                poll=poll, 
+                user=request.user, 
+                defaults={'choice': choice}
+            )
+            messages.success(request, f"Your response '{choice}' has been recorded.")
+        else:
+            messages.error(request, "Invalid choice.")
+            
+    return redirect('notices:home')
+
+
+# ==========================================
+# 15. ADMIN ANALYTICS DASHBOARD
+# ==========================================
+from django.db.models import Count
+
+@staff_member_required
+def analytics_dashboard(request):
+    # 1. General Stats
+    total_students = User.objects.filter(is_staff=False, is_superuser=False).count()
+    total_notices = Notice.objects.count()
+    
+    # 2. Poll Engagement
+    total_polls = Poll.objects.count()
+    total_votes = PollResponse.objects.count()
+    
+    # 3. Department Read Engagement
+    departments = ['MCA', 'BTech', 'MBA']
+    dept_stats = []
+    
+    for dept in departments:
+        # How many students in this dept?
+        student_count = User.objects.filter(profile__department=dept, is_staff=False).count()
+        # How many total read receipts belong to students in this dept?
+        read_count = NoticeReadStatus.objects.filter(user__profile__department=dept).count()
+        
+        dept_stats.append({
+            'department': dept,
+            'students': student_count,
+            'reads': read_count,
+        })
+
+    context = {
+        'total_students': total_students,
+        'total_notices': total_notices,
+        'total_polls': total_polls,
+        'total_votes': total_votes,
+        'dept_stats': dept_stats,
+    }
+    
+    return render(request, 'notices/analytics.html', context)
+
+
+# ==========================================
+# 16. INTERNAL CALENDAR DASHBOARD
+# ==========================================
+from django.urls import reverse
+
+@login_required
+def calendar_view(request):
+    """Renders the empty calendar page."""
+    return render(request, 'notices/calendar.html')
+
+@login_required
+def get_calendar_events(request):
+    """Returns a JSON list of notices and polls for FullCalendar.js"""
+    user = request.user
+    
+    # Determine department
+    if user.is_staff or user.is_superuser:
+        user_dept = 'All' # Staff sees everything
+    else:
+        try:
+            user_dept = user.profile.department
+        except:
+            user_dept = 'All'
+
+    events = []
+
+    # 1. Fetch Notices with Deadlines
+    if user.is_staff or user.is_superuser:
+        notices = Notice.objects.filter(expires_at__isnull=False)
+    else:
+        notices = Notice.objects.filter(
+            is_approved=True, 
+            expires_at__isnull=False,
+            target_department__in=['All', user_dept]
+        )
+
+    for notice in notices:
+        # Note: adjust 'notices:NoticeView' below if your actual URL name is different
+        events.append({
+            'title': f"📝 {notice.title}",
+            'start': notice.expires_at.isoformat(),
+            'url': reverse('notices:notice_page', args=[notice.id]), 
+            'backgroundColor': 'rgba(255, 193, 7, 0.9)', # Warning/Yellow
+            'borderColor': '#ffc107',
+            'textColor': '#000'
+        })
+
+    # 2. Fetch Active Polls (Displaying on the day they were created)
+    if user.is_staff or user.is_superuser:
+        polls = Poll.objects.filter(is_active=True)
+    else:
+        polls = Poll.objects.filter(
+            is_active=True,
+            target_department__in=['All', user_dept]
+        )
+
+    for poll in polls:
+        events.append({
+            'title': f"📊 Poll: {poll.question}",
+            'start': poll.created_at.isoformat(),
+            'allDay': True,
+            'url': reverse('notices:home'), # Redirects home where polls live
+            'backgroundColor': 'rgba(40, 167, 69, 0.9)', # Success/Green
+            'borderColor': '#28a745',
+        })
+
+    return JsonResponse(events, safe=False)

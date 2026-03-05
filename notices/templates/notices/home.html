@@ -1,5 +1,6 @@
 {% extends 'notices/base.html' %}
 {% load static %}
+{% load poll_extras %} 
 
 {% block content %}
 <div class="container-fluid mb-5 animate-fade-in">
@@ -62,6 +63,52 @@
     </div>
 </div>
 
+{% if active_polls %}
+    <div class="row animate-up mb-5">
+        <div class="col-12">
+            <h4 class="text-white mb-3"><i class="fas fa-poll-h mr-2"></i> Active Polls</h4>
+        </div>
+        {% for poll in active_polls %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0 glass-card" style="border-radius: 24px; background: rgba(13, 110, 253, 0.1) !important; border: 1px solid rgba(13, 110, 253, 0.2) !important;">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge badge-dept-all"><i class="fas fa-question-circle mr-1"></i> Question</span>
+                            {% if poll.target_department != 'All' %}
+                                <span class="badge badge-dept-specific">{{ poll.target_department }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <h5 class="card-title font-weight-800 text-white mb-2" style="letter-spacing: -0.5px;">{{ poll.question }}</h5>
+                        {% if poll.description %}
+                            <p class="card-text text-white-50 small mb-4">{{ poll.description }}</p>
+                        {% endif %}
+                        
+                        <div class="mt-auto">
+                            {% if poll.id in user_poll_responses %}
+                                <div class="text-center p-2" style="background: rgba(40, 167, 69, 0.1); border-radius: 12px; border: 1px solid rgba(40, 167, 69, 0.2);">
+                                    <span class="text-success font-weight-700 small">
+                                        <i class="fas fa-check-circle mr-1"></i> You voted: {{ user_poll_responses|dict_key:poll.id }}
+                                    </span>
+                                </div>
+                            {% else %}
+                                <form action="{% url 'notices:submit_poll' poll.id %}" method="POST" class="d-flex justify-content-between">
+                                    {% csrf_token %}
+                                    <button type="submit" name="choice" value="Yes" class="btn btn-success flex-fill mr-2 shadow-sm" style="border-radius: 12px; font-weight: 700;">
+                                        <i class="fas fa-thumbs-up mr-1"></i> Yes
+                                    </button>
+                                    <button type="submit" name="choice" value="No" class="btn btn-danger flex-fill ml-2 shadow-sm" style="border-radius: 12px; font-weight: 700;">
+                                        <i class="fas fa-thumbs-down mr-1"></i> No
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 <div class="row animate-up">
     {% for notice in notices %}
         <div class="col-md-6 col-lg-4 mb-4">
@@ -313,6 +360,11 @@
         background-color: #218838 !important;
         transform: scale(1.02);
         box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4) !important;
+    }
+
+    .btn-danger:hover {
+        transform: scale(1.02);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4) !important;
     }
 
     .btn-outline-light:hover {

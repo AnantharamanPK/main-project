@@ -29,4 +29,8 @@ urlpatterns = [
     path('archive/', views.ArchivedNoticeListView.as_view(), name='archive'),
     # notices/urls.py
 path('notice/<int:notice_id>/google-calendar/', views.open_google_calendar, name='open_google_calendar'),
+path('poll/<int:poll_id>/submit/', views.submit_poll, name='submit_poll'),
+path('analytics/', views.analytics_dashboard, name='analytics'),
+path('calendar/', views.calendar_view, name='calendar'),
+path('api/calendar-events/', views.get_calendar_events, name='calendar_events'),
 ]
