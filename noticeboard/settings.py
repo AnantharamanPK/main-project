@@ -61,7 +61,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        # ADD THIS OPTIONS BLOCK:
+        'OPTIONS': {
+            # Tells Django to wait up to 20 seconds for the lock to release
+            'timeout': 20,
     }
+}
 }
 
 # 7. Static and Media (For Photos/Files)

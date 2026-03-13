@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
@@ -67,6 +67,14 @@ class NoticeListView(LoginRequiredMixin, ListView):
                 is_read=False
             )
 
+            # --- NEW: CHECK FOR REJECTED NOTICES (STAFF ONLY) ---
+            if user.is_staff or user.is_superuser:
+                context['rejected_notices_count'] = Notice.objects.filter(
+                    created_by=user, 
+                    status='rejected'
+                ).count()
+            # ----------------------------------------------------
+
             # ==========================================
             # NEW: POLL LOGIC
             # ==========================================
@@ -124,7 +132,7 @@ class ArchivedNoticeListView(LoginRequiredMixin, ListView):
 
         return queryset.order_by('-expires_at')
 
-# 3. GOOGLE CALENDAR REDIRECT
+# 3. GOOGLE CALENDAR REDIRECT (All-Day Reminder Style)
 @login_required
 def open_google_calendar(request, notice_id):
     notice = get_object_or_404(Notice, id=notice_id)
@@ -132,15 +140,19 @@ def open_google_calendar(request, notice_id):
         messages.error(request, "This notice does not have a deadline.")
         return redirect('notices:notice_page', notice_id=notice.id)
 
-    fmt = "%Y%m%dT%H%M%SZ"
-    start_time = notice.expires_at.strftime(fmt)
-    end_time = (notice.expires_at + timezone.timedelta(hours=1)).strftime(fmt)
+    # To make it act like a reminder, we use ONLY the date (YYYYMMDD) 
+    # and remove the specific hours and minutes.
+    fmt = "%Y%m%d"
+    start_date = notice.expires_at.strftime(fmt)
+    
+    # For an all-day event, Google requires the end date to be the next day
+    end_date = (notice.expires_at + timezone.timedelta(days=1)).strftime(fmt)
 
     params = {
         'action': 'TEMPLATE',
-        'text': notice.title,
-        'dates': f"{start_time}/{end_time}",
-        'details': f"Noticeboard Alert [{notice.target_department}]: {notice.message[:500]}",
+        'text': f"🚨 DEADLINE: {notice.title}",
+        'dates': f"{start_date}/{end_date}", # No times, just dates
+        'details': f"Noticeboard Alert [{notice.target_department}]: {notice.message[:500]}\n\nView full details on the Campus Portal.",
         'location': 'Campus Noticeboard',
         'sf': 'true',
         'output': 'xml'
@@ -242,6 +254,19 @@ def edit_notice(request, notice_id):
             updated_notice.is_approved = False 
             updated_notice.rejection_reason = "" 
             updated_notice.save()
+            
+            # --- NEW: NOTIFY ADMINS THAT IT WAS RESUBMITTED ---
+            admins = User.objects.filter(is_superuser=True)
+            notifications = [
+                Notification(
+                    recipient=admin,
+                    message=f"🔄 Resubmitted for Approval: {updated_notice.title} by @{request.user.username}",
+                    related_notice=updated_notice
+                ) for admin in admins
+            ]
+            Notification.objects.bulk_create(notifications)
+            # --------------------------------------------------
+            
             messages.success(request, "Notice resubmitted for approval!")
             return redirect('notices:home')
     else:
@@ -328,7 +353,11 @@ def submit_poll(request, poll_id):
 # ==========================================
 from django.db.models import Count
 
-@staff_member_required
+# This creates a rule: The user MUST be a superuser to pass
+def is_admin(user):
+    return user.is_superuser
+
+@user_passes_test(is_admin)
 def analytics_dashboard(request):
     # 1. General Stats
     total_students = User.objects.filter(is_staff=False, is_superuser=False).count()

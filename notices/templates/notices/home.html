@@ -4,6 +4,25 @@
 
 {% block content %}
 <div class="container-fluid mb-5 animate-fade-in">
+    
+    {% if rejected_notices_count > 0 %}
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4 animate-up" role="alert" style="border-radius: 12px; border-left: 5px solid #dc3545; background: rgba(220, 53, 69, 0.15); backdrop-filter: blur(10px);">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x mr-3" style="color: #ff6b6b;"></i>
+                <div>
+                    <h5 class="mb-1" style="color: #ff6b6b; font-weight: bold;">Action Required</h5>
+                    <p class="mb-0 text-white-50">
+                        You have <strong>{{ rejected_notices_count }}</strong> notice(s) that were rejected by the Admin. 
+                        <a href="{% url 'notices:user_notices' user=user.username %}" class="alert-link" style="color: #ffb3b3; text-decoration: underline;">Click here to review and resubmit them.</a>
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close" style="color: #ff6b6b; text-shadow: none;">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    {% endif %}
+
     {% if direct_messages %}
         {% for msg in direct_messages %}
             <div class="alert alert-warning border-0 shadow-sm mb-4 animate-up" 

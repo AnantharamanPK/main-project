@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.utils.html import format_html # Added for formatting Poll results
 from django.shortcuts import redirect # Added for the Analytics redirect
 from .models import Notice, NoticeReadStatus, DirectMessage, Profile, Notification, Poll, PollResponse, AnalyticsLink # Added AnalyticsLink
-
+from django.contrib.auth.admin import UserAdmin
 # ==========================================
 # 1. Profile Admin (To manage departments)
 # ==========================================
@@ -185,3 +185,22 @@ class AnalyticsLinkAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         # This removes the "+ Add" button so it just looks like a standard link
         return False
+    
+    # ==========================================
+# 7. Add Department Dropdown to User Admin
+# ==========================================
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+    verbose_name_plural = 'Student Department'
+
+# Get the standard User model
+User = get_user_model()
+
+# Unregister Django's default User admin
+admin.site.unregister(User)
+
+# Re-register the User admin, but attach our new ProfileInline to it
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    inlines = (ProfileInline, )
