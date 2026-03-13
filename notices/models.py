@@ -8,7 +8,7 @@ from django.dispatch import receiver
 from django.conf import settings
 from datetime import timedelta
 import os
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 
 # ==========================================
 # 1. NEW: User Profile (To store Department)
@@ -62,6 +62,10 @@ class Notice(models.Model):
     created_by = models.ForeignKey(User, related_name='notices', on_delete=models.CASCADE)
 
     notifications_sent = models.BooleanField(default=False)
+    
+    # NEW: Tracks if the automated alerts have been sent
+    alert_48h_sent = models.BooleanField(default=False)
+    alert_24h_sent = models.BooleanField(default=False)
 
     status = models.CharField(
         max_length=10, 
@@ -186,30 +190,49 @@ def create_notice_notification(sender, instance, created, **kwargs):
         student_emails = [student.email for student in students if student.email]
         
         if student_emails:
+            # --- MAKE SURE TO USE YOUR IPV4 ADDRESS HERE IF TESTING ON PHONE ---
+            site_url = "http://127.0.0.1:8000" 
+            notice_link = f"{site_url}/notices/view/{instance.id}/"
+            
             subject = f"New Campus Notice [{instance.target_department}]: {instance.title}"
-            body = f"""Hello,
-
-A new notice has been posted for the {instance.target_department} department.
-
-TITLE: {instance.title}
-DEADLINE: {email_deadline}
-
-MESSAGE:
-{instance.message}
-
-Please log in to the Campus Noticeboard portal to view any attachments and officially acknowledge that you have read this notice.
-
-Regards,
-Admin"""
+            
+            # The plain text backup version
+            text_body = f"Hello,\n\nA new notice has been posted for the {instance.target_department} department.\n\nTITLE: {instance.title}\nDEADLINE: {email_deadline}\n\nPlease view and acknowledge it here: {notice_link}"
+            
+            # The beautiful HTML version with the button!
+            html_body = f"""
+            <html>
+              <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                <h2 style="color: #0d6efd;">📢 New Campus Notice Posted</h2>
+                <p>Hello,</p>
+                <p>A new notice has been posted for the <strong>{instance.target_department}</strong> department.</p>
+                <p>
+                  <strong>Title:</strong> {instance.title}<br>
+                  <strong>Deadline:</strong> {email_deadline}
+                </p>
+                <br>
+                <a href="{notice_link}" style="display: inline-block; padding: 12px 24px; font-size: 16px; color: #ffffff; background-color: #0d6efd; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  View Notice & Acknowledge
+                </a>
+                <br><br>
+                <p style="font-size: 12px; color: #777; margin-top: 20px;">
+                  If the button doesn't work, copy and paste this link into your browser:<br>
+                  <a href="{notice_link}" style="color: #0d6efd;">{notice_link}</a>
+                </p>
+              </body>
+            </html>
+            """
             
             try:
-                # We use BCC so students don't see everyone else's email address
-                email = EmailMessage(
+                # Build the email with the text version first
+                email = EmailMultiAlternatives(
                     subject=subject,
-                    body=body,
+                    body=text_body,
                     from_email=settings.EMAIL_HOST_USER,
                     bcc=student_emails
                 )
+                # Attach the HTML version so the button shows up
+                email.attach_alternative(html_body, "text/html")
                 email.send(fail_silently=True)
             except Exception as e:
                 print(f"Email failed to send: {e}")

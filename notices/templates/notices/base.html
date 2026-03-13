@@ -230,10 +230,10 @@
 
                 <ul class="navbar-nav ml-auto align-items-center mt-3 mt-lg-0">
                     <li class="nav-item mr-3">
-    <a class="nav-link text-white" href="{% url 'notices:calendar' %}" style="font-weight: 600;">
-        <i class="far fa-calendar-alt mr-1"></i> Calendar
-    </a>
-</li>
+                        <a class="nav-link text-white" href="{% url 'notices:calendar' %}" style="font-weight: 600;">
+                            <i class="far fa-calendar-alt mr-1"></i> Calendar
+                        </a>
+                    </li>
                     <li class="nav-item dropdown mr-3">
                         <a class="nav-link text-white" href="#" id="notifDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 1.3rem; position: relative;">
                             🔔
@@ -294,19 +294,24 @@
                         </div>
                     </li>
 
-                    {% if user.is_staff %}
+                    {% if user.is_superuser %}
                         {% if request.resolver_match.url_name != 'analytics' %}
                             <li class="nav-item mr-2">
                                 <a href="{% url 'notices:analytics' %}" class="btn btn-info btn-nav-custom text-white" style="background-color: var(--portal-blue); border-color: var(--portal-blue);">
                                     <i class="fas fa-chart-pie mr-1"></i> Analytics
                                 </a>
                             </li>
-                            
+                        {% endif %}
+                    {% endif %}
+                    
+                    {% if user.is_staff or user.is_superuser %}
+                        {% if request.resolver_match.url_name != 'analytics' %}
                             <li class="nav-item">
                                 <a href="{% url 'notices:new_notice' %}" class="btn btn-warning btn-nav-custom">+ Post Notice</a>
                             </li>
                         {% endif %}
                     {% endif %}
+
                 </ul>
             </div>
         </div>
