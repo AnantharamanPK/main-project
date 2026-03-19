@@ -1,0 +1,159 @@
+{% extends 'notices/base.html' %}
+{% load static %}
+
+{% block title %}Welcome - NoticeBoard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <div class="text-center mb-5 animate-fade-in">
+        <h1 class="display-3 font-weight-800 text-white mb-2 main-title">
+            Welcome to <span class="gradient-text">NoticeBoard</span>
+        </h1>
+        
+    </div>
+
+    <div class="row justify-content-center">
+        
+        <div class="col-lg-4 col-md-6 mb-4 animate-up" style="animation-delay: 0.1s;">
+            <div class="portal-card h-100 text-center p-5">
+                <div class="img-wrapper mb-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3413/3413535.png" alt="Student Icon" class="card-img-icon">
+                </div>
+                <h2 class="portal-heading">Student Portal</h2>
+                <p class="portal-subtext">Browse all active announcements and exam schedules instantly.</p>
+                <a href="{% url 'accounts:student_login' %}" class="btn btn-primary btn-portal shadow-blue">
+                    ENTER PORTAL
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4 animate-up" style="animation-delay: 0.2s;">
+            <div class="portal-card h-100 text-center p-5">
+                <div class="img-wrapper mb-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2436/2436874.png" alt="Staff Icon" class="card-img-icon">
+                </div>
+                <h2 class="portal-heading">Staff Login</h2>
+                <p class="portal-subtext">Authorized access for faculty to post and manage notices.</p>
+                <a href="{% url 'accounts:staff_login' %}" class="btn btn-dark btn-portal shadow-dark">
+                    STAFF LOGIN
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4 animate-up" style="animation-delay: 0.3s;">
+            <div class="portal-card h-100 text-center p-5">
+                <div class="img-wrapper mb-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2345/2345338.png" alt="Admin Icon" class="card-img-icon">
+                </div>
+                <h2 class="portal-heading">Admin Login</h2>
+                <p class="portal-subtext">Administrative access for system management and approval.</p>
+                <a href="/admin/" class="btn btn-purple btn-portal shadow-purple">
+                    ADMIN LOGIN
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* --- Typography --- */
+    .main-title {
+        letter-spacing: -2px;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .gradient-text {
+        background: linear-gradient(135deg, #ffc107, #ffdb73);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .font-weight-800 { font-weight: 800; }
+    .font-weight-500 { font-weight: 500; }
+
+    /* --- Card Styles --- */
+    .portal-card {
+        background: #ffffff;
+        border-radius: 35px; /* Softer curves like your image */
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        z-index: 1;
+    }
+    .portal-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+    }
+
+    /* --- Images --- */
+    .img-wrapper {
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-img-icon {
+        width: 90px;
+        height: 90px;
+        object-fit: contain;
+        transition: transform 0.4s ease;
+    }
+    .portal-card:hover .card-img-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    /* --- Text --- */
+    .portal-heading {
+        font-weight: 800;
+        color: #212529;
+        font-size: 1.75rem;
+        margin-bottom: 15px;
+    }
+    .portal-subtext {
+        color: #6c757d;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 30px;
+        min-height: 48px; /* Keeps cards aligned */
+    }
+
+    /* --- Buttons --- */
+    .btn-portal {
+        width: 100%;
+        padding: 15px;
+        border-radius: 50px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .btn-portal:hover { transform: translateY(-3px); }
+
+    .btn-primary { background: #007bff; }
+    .shadow-blue:hover { box-shadow: 0 10px 25px rgba(0, 123, 255, 0.4); }
+
+    .btn-dark { background: #212529; }
+    .shadow-dark:hover { box-shadow: 0 10px 25px rgba(33, 37, 41, 0.4); }
+
+    .btn-purple { background: #241441; color: white; } /* Dark purple from image */
+    .shadow-purple:hover { box-shadow: 0 10px 25px rgba(36, 20, 65, 0.4); color: white; }
+
+    /* --- Animations --- */
+    .animate-fade-in { animation: fadeInDown 0.8s ease-out; }
+    .animate-up { 
+        opacity: 0;
+        animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+    }
+
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

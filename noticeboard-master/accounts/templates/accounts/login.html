@@ -1,0 +1,124 @@
+{% extends 'notices/base.html' %}
+{% load static %}
+
+{% block title %}Log In - NoticeBoard{% endblock %}
+
+{% block stylesheet %}
+<style>
+    .login-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(15px);
+        border-radius: 35px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        padding: 40px;
+        width: 100%;
+        max-width: 450px;
+    }
+
+    .card-title {
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: var(--primary-dark);
+        margin-bottom: 30px;
+        text-align: center;
+        font-size: 2rem;
+    }
+
+    /* Styling the form inputs inside the included form.html */
+    .form-group label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #4b5563;
+        margin-left: 5px;
+    }
+
+    .form-control {
+        border-radius: 14px;
+        padding: 12px 15px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.1);
+    }
+
+    .btn-login {
+        background-color: #007bff !important;
+        border: none;
+        border-radius: 16px;
+        padding: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 8px 15px rgba(0, 123, 255, 0.25);
+        transition: all 0.3s;
+        margin-top: 20px;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 20px rgba(0, 123, 255, 0.35);
+    }
+
+    .card-footer-custom {
+        background: transparent;
+        border: none;
+        text-align: center;
+        margin-top: 25px;
+    }
+
+    .card-footer-custom a {
+        color: #007bff;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .forgot-password {
+        display: block;
+        margin-top: 15px;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <h3 class="card-title">Portal Login</h3>
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            
+            <div class="mb-3">
+                {% include 'notices/form.html' %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-login">
+                Sign In
+            </button>
+        </form>
+
+        <div class="card-footer-custom">
+            <p class="mb-1 text-muted">Don't have an account? 
+                <a href="{% url 'accounts:signup' %}">Create one</a>
+            </p>
+            <a href="{% url 'accounts:password_reset' %}" class="forgot-password">
+                Forgot your password?
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

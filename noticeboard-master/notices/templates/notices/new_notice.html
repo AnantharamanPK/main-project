@@ -1,0 +1,28 @@
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0 p-4" style="border-radius: 20px;">
+                <h3 class="text-center mb-4">Create New Notice</h3>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold">{{ field.label }}</label>
+                            {% render_field field class="form-control" placeholder=field.label %}
+                            {% if field.help_text %}
+                                <small class="text-muted d-block">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg border-0 shadow-sm" style="background: linear-gradient(to right, #007bff, #00c6ff);">
+                            <i class="fa fa-paper-plane"></i> Post Notice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

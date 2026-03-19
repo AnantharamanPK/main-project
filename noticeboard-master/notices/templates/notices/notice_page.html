@@ -1,0 +1,142 @@
+{% extends 'notices/base.html' %}
+{% load humanize %}
+
+{% block stylesheet %}
+<style>
+    /* Premium Glass Container */
+    .glass-notice-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        padding: 2.5rem;
+        margin-top: 2rem;
+    }
+
+    /* Typography & Header */
+    .notice-main-title {
+        font-weight: 800;
+        color: #1a202c;
+        font-size: 2.2rem;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .notice-meta {
+        font-size: 0.95rem;
+        color: #718096;
+        border-bottom: 1px solid #edf2f7;
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .notice-body-text {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #2d3748;
+    }
+
+    /* Attachment UI */
+    .attachment-box {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e0;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .attachment-box:hover {
+        border-color: #4299e1;
+        background: #ebf8ff;
+    }
+
+    /* Tag Styling */
+    .tag-link {
+        display: inline-block;
+        background: #ebf4ff;
+        color: #3182ce;
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-right: 5px;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .tag-link:hover {
+        background: #3182ce;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="glass-notice-card">
+                
+                <h1 class="notice-main-title">{{ notice.title }}</h1>
+                
+                <div class="notice-meta d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="font-weight-bold text-dark">@{{ notice.created_by }}</span>
+                    </div>
+                    <div>
+                        <i class="far fa-clock"></i> {{ notice.created_at|naturaltime }}
+                    </div>
+                </div>
+
+                <div class="notice-body-text mb-4">
+                    {% if notice.get_message_as_markdown %}
+                        {{ notice.get_message_as_markdown }}
+                    {% else %}
+                        {{ notice.message|linebreaks }}
+                    {% endif %}
+                </div>
+
+                {% if notice.tags %}
+                <div class="mb-5">
+                    <span class="text-muted small font-weight-bold text-uppercase mr-2">Tags:</span>
+                    {% for tag in notice.get_tags_as_list %}
+                        <a href="{% url 'notices:tag' tag %}" class="tag-link">#{{ tag }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if notice.attachment %}
+                <div class="attachment-section">
+                    
+                    <div class="attachment-box p-4 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <div class="mr-3" style="font-size: 2rem; color: #e53e3e;">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div>
+                                <strong class="d-block text-dark">Document Attachment</strong>
+                                <small class="text-muted text-truncate d-inline-block" style="max-width: 250px;">
+                                    {{ notice.attachment.name }}
+                                </small>
+                            </div>
+                        </div>
+                        <a href="{{ notice.attachment.url }}" class="btn btn-primary px-4 shadow-sm" target="_blank">
+                            <i class="fas fa-external-link-alt mr-2"></i> View PDF
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="{% url 'notices:home' %}" class="btn btn-link text-white font-weight-bold">
+                    <i class="fas fa-chevron-left mr-2"></i> Return to Board
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

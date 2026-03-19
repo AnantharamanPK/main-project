@@ -1,0 +1,65 @@
+{% extends 'notices/home.html' %}
+
+{% block breadcrumb %} 
+    Notices by <strong>{{ user.username }}</strong> 
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-white mb-4">My Submissions</h2>
+    <div class="row">
+        {% for notice in notices %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card glass-card h-100 shadow-sm" style="border-radius: 20px; border: none; background: rgba(255, 255, 255, 0.95);">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title font-weight-bold" style="color: #2c3e50;">{{ notice.title }}</h5>
+                            
+                            {# Using .lower handles database values like 'REJECTED', 'Rejected', or 'rejected' #}
+                            {% with status=notice.status.lower %}
+                                {% if status == 'approved' %}
+                                    <span class="badge badge-pill badge-success px-3 py-2">Approved</span>
+                                {% elif status == 'rejected' %}
+                                    <span class="badge badge-pill badge-danger px-3 py-2" style="background-color: #dc3545 !important;">Rejected</span>
+                                {% else %}
+                                    <span class="badge badge-pill badge-warning px-3 py-2">Pending</span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+
+                        <p class="card-text text-muted">{{ notice.message|truncatewords:15 }}</p>
+
+                        {# Rejection Reason Logic #}
+                        {% if notice.status.lower == 'rejected' %}
+                            <div class="mt-3 p-2 rounded" style="background: #fff5f5; border-left: 4px solid #f56565;">
+                                <strong class="text-danger small"><i class="fas fa-exclamation-circle"></i> Admin Note:</strong>
+                                <p class="mb-0 small text-dark">
+                                    {% if notice.rejection_reason %}
+                                        {{ notice.rejection_reason }}
+                                    {% else %}
+                                        No specific reason provided.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="far fa-calendar-alt"></i> {{ notice.created_at|date:"M d, Y" }}
+                            </small>
+                            {% if notice.status.lower == 'rejected' %}
+                                <a href="{% url 'notices:edit_notice' notice.id %}" class="btn btn-sm btn-outline-primary py-0" style="font-size: 0.7rem;">Edit & Resubmit</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center text-white py-5">
+                <i class="fas fa-folder-open fa-3x mb-3" style="opacity: 0.5;"></i>
+                <p>You haven't submitted any notices yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+<div class="notice-content">
+    <h2>{{ notice.title }}</h2>
+    <p>{{ notice.message }}</p>
+
+    {% if notice.attachment %}
+        <div class="attachment-box mt-4 p-3 border rounded bg-light">
+            <h5 class="mb-2">Attachment:</h5>
+            <a href="{{ notice.attachment.url }}" class="btn btn-outline-primary" target="_blank">
+                View PDF ({{ notice.attachment.name }})
+            </a>
+        </div>
+    {% endif %}
+</div>

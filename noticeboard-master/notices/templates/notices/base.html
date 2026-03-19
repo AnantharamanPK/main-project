@@ -1,0 +1,236 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}Notice Board{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    
+    {% block stylesheet %}{% endblock %}
+    
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --primary-dark: #111827;
+            --accent-color: #ffc107;
+            --portal-blue: #007bff; 
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--primary-dark);
+            -webkit-font-smoothing: antialiased;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Navbar Styles --- */
+        .navbar {
+            margin: 15px 20px;
+            border-radius: 22px;
+            background: rgba(17, 24, 39, 0.82) !important;
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            padding: 12px 25px;
+        }
+
+        .navbar-brand { 
+            font-weight: 800; 
+            letter-spacing: -0.05em;
+            font-size: 1.6rem;
+            color: white !important;
+        }
+
+        /* --- Live Search Styles --- */
+        .search-wrapper {
+            position: relative;
+            width: 350px;
+        }
+
+        #search-input {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white !important;
+            border-radius: 14px;
+            padding: 10px 20px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        #search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 14px;
+            margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .search-item {
+            display: block;
+            padding: 12px 20px;
+            color: var(--primary-dark);
+            text-decoration: none !important;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+
+        .search-item:hover {
+            background: rgba(0,0,0,0.05);
+            padding-left: 25px;
+        }
+
+        /* --- User & Button Styles --- */
+        .user-profile-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 6px 15px 6px 8px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .avatar-circle {
+            width: 32px; height: 32px;
+            background: white; color: #111;
+            border-radius: 10px;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-weight: 800; margin-right: 10px;
+        }
+
+        .btn-nav-custom {
+            border-radius: 14px;
+            font-weight: 700;
+            padding: 10px 22px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-portal {
+            background-color: var(--portal-blue) !important;
+            color: white !important;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-portal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+        }
+
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+    {% if user.is_authenticated %}
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'notices:home' %}">
+                NoticeBoard<span style="color: var(--accent-color);">.</span>
+            </a>
+
+            <div class="collapse navbar-collapse" id="mainMenu">
+                <div class="mx-auto mt-3 mt-lg-0 search-wrapper">
+                    <form action="{% url 'notices:home' %}" method="GET" autocomplete="off">
+                        <input id="search-input" name="q" class="form-control" type="text" 
+                               placeholder="Search board..." value="{{ request.GET.q }}">
+                        <div id="search-results"></div>
+                    </form>
+                </div>
+
+                <ul class="navbar-nav ml-auto align-items-center mt-3 mt-lg-0">
+                    <li class="nav-item dropdown mr-lg-3">
+                        <a class="nav-link dropdown-toggle p-0" href="#" id="userMenu" data-toggle="dropdown">
+                            <div class="user-profile-box">
+                                <div class="avatar-circle">{{ user.username|first|upper }}</div>
+                                <span class="text-white font-weight-600">@{{ user.username }}</span>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right glass-dropdown">
+                            <a class="dropdown-item py-2" href="{% url 'accounts:my_account' %}">Profile Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger py-2" href="{% url 'accounts:logout' %}">Sign Out</a>
+                        </div>
+                    </li>
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a href="{% url 'notices:new_notice' %}" class="btn btn-primary btn-nav-custom">+ Post Notice</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="main-wrapper container pb-5 mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/popper.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('#search-input').on('keyup', function() {
+                let query = $(this).val();
+                if (query.length > 1) {
+                    $.ajax({
+                        url: "{% url 'accounts:live_search' %}",
+                        data: { 'q': query },
+                        success: function(data) {
+                            let results = $('#search-results');
+                            results.empty().show();
+                            if (data.results.length > 0) {
+                                data.results.forEach(function(item) {
+                                   // Update this line in the <script> section of base.html
+                                results.append(`<a href="/notices/view/${item.id}/" class="search-item">${item.title}</a>`);
+                                });
+                            } else {
+                                results.append('<div class="p-3 text-muted">No notices found.</div>');
+                            }
+                        }
+                    });
+                } else {
+                    $('#search-results').hide();
+                }
+            });
+
+            $(document).click(function(e) {
+                if (!$(e.target).closest('.search-wrapper').length) {
+                    $('#search-results').hide();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

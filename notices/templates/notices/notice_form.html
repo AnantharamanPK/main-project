@@ -1,0 +1,243 @@
+{% extends 'notices/base.html' %}
+
+{% block title %}Create Notice - Notice Board{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-in">
+    <div class="col-md-8 col-lg-6">
+        <a href="{% url 'notices:home' %}" class="back-link mb-4">
+            <span class="icon">←</span> Back to Dashboard
+        </a>
+
+        <div class="card glass-form-card border-0 shadow-lg">
+            <div class="card-body p-4 p-md-5">
+                <div class="header-section mb-5">
+                    <h2 class="font-weight-800 display-5" style="letter-spacing: -1.5px; color: #111827;">
+                        {% if edit_mode %}Update Notice{% else %}Post a New Notice{% endif %}
+                    </h2>
+                    <p class="text-muted">Fill in the details below to update the board.</p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="field-label">Notice Title</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="field-label">Target Audience</label>
+                        {{ form.target_department }}
+                        <p class="text-muted-light mt-2">Which department should see this? Choosing "All" sends to everyone.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="field-label">Target Community <span class="optional-tag">(Optional)</span></label>
+                        {{ form.target_community }}
+                        <p class="text-muted-light mt-2">Select a specific batch or leave as "All" to target the entire department.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="field-label">Announcement Details</label>
+                        {{ form.message }}
+                        <small class="text-muted-light">{{ form.message.help_text }}</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="field-label">Tags <span class="optional-tag">(Optional)</span></label>
+                        {{ form.tags }}
+                        <small class="text-muted-light">{{ form.tags.help_text }}</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="field-label">Attachments <span class="optional-tag">(PDF or Image)</span></label>
+                        <div class="file-upload-wrapper">
+                            {{ form.attachment }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-publish w-100 mt-3 shadow-sm">
+                        <i class="fas fa-paper-plane mr-2"></i> Submit for Approval
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* --- Modern Glass Card --- */
+    .glass-form-card {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        border-radius: 24px !important;
+    }
+
+    /* --- Labels & Text --- */
+    .field-label {
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #4b5563;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .optional-tag {
+        text-transform: none;
+        letter-spacing: 0;
+        color: #9ca3af;
+        font-weight: 400;
+    }
+
+    .text-muted-light {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    /* --- Back Link Interaction --- */
+    .back-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none !important;
+        font-weight: 600;
+        display: inline-block;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .back-link:hover {
+        color: #fff;
+        transform: translateX(-5px);
+    }
+
+    /* --- Input Styling (Inherited from forms.py custom-input class) --- */
+    .custom-input {
+        background: rgba(255, 255, 255, 0.5) !important;
+        border: 1.5px solid rgba(0, 0, 0, 0.08) !important;
+        border-radius: 14px !important;
+        padding: 14px 18px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #1f2937 !important;
+        width: 100%; /* Ensures inputs fill the card */
+    }
+
+    .custom-input:focus {
+        background: #fff !important;
+        border-color: #ffc107 !important;
+        box-shadow: 0 10px 25px rgba(255, 193, 7, 0.15) !important;
+        outline: none;
+        transform: translateY(-2px);
+    }
+
+    /* Dropdown specific styling */
+    select.custom-input {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%234b5563' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: calc(100% - 20px) center;
+    }
+
+    /* --- File Upload Style --- */
+    .file-upload-wrapper {
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.03);
+        border: 2px dashed rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        transition: background 0.3s ease;
+    }
+
+    .file-upload-wrapper:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* --- Primary Button --- */
+    .btn-publish {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 16px !important;
+        padding: 16px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.02em;
+        transition: all 0.3s ease !important;
+    }
+
+    .btn-publish:hover {
+        transform: scale(1.01) translateY(-3px);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3) !important;
+    }
+
+    /* --- Animations --- */
+    .animate-fade-in {
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    /* Specifically targeting the dropdown to fix visibility and size */
+select.custom-input {
+    height: auto !important; /* Allows padding to define the height */
+    min-height: 55px;        /* Ensures it matches your other inputs */
+    line-height: 1.5;
+    color: #1f2937 !important; /* Dark text for visibility on light background */
+    display: block;
+    width: 100%;
+}
+
+/* Fix for the text inside the options dropdown */
+select.custom-input option {
+    background-color: #ffffff; /* Ensures the list background is white */
+    color: #1f2937;            /* Ensures text is dark and readable */
+    padding: 10px;
+}
+    
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const deptDropdown = document.getElementById("id_target_department");
+        const commDropdown = document.getElementById("id_target_community");
+
+        if (deptDropdown && commDropdown) {
+            
+            function fetchCommunities() {
+                const selectedDept = deptDropdown.value;
+                
+                // 1. Call our new Django API Endpoint
+                const url = `/notices/ajax/load-communities/?department=${selectedDept}`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        // 2. Clear the current dropdown options
+                        commDropdown.innerHTML = "";
+                        
+                        // 3. Always add the default "All" option back in
+                        let defaultOption = new Option("All", "");
+                        commDropdown.add(defaultOption);
+                        
+                        // 4. Loop through the JSON data and build the new options
+                        data.forEach(community => {
+                            let option = new Option(community.name, community.id);
+                            commDropdown.add(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching communities:', error));
+            }
+
+            // Listen for changes
+            deptDropdown.addEventListener("change", fetchCommunities);
+            
+            // Run once on load to set the initial state
+            fetchCommunities();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'notices/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <div class="text-center mb-5 animate-up">
+        <h1 class="display-4 font-weight-800 text-white mb-3">
+            Welcome to <span style="color: #ffc107;">NoticeBoard</span>
+        </h1>
+    </div>
+
+    <div class="row justify-content-center">
+        
+        <div class="col-md-6 col-lg-4 mb-4 animate-up" style="animation-delay: 0.1s;">
+            <div class="card h-100 border-0 shadow-lg choice-card">
+                <div class="card-body text-center p-5 d-flex flex-column align-items-center">
+                    <div class="icon-circle mb-4 bg-light-blue">
+                        <i class="fas fa-book-reader fa-3x text-primary"></i>
+                    </div>
+                    <h3 class="font-weight-800 mb-3 text-dark">Student Portal</h3>
+                    <p class="text-muted mb-4">Browse all active announcements and exam schedules instantly.</p>
+                    <a href="{% url 'accounts:student_login' %}" class="btn btn-primary btn-block py-3 font-weight-bold rounded-pill mt-auto shadow-sm">
+                        ENTER PORTAL
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 mb-4 animate-up" style="animation-delay: 0.2s;">
+            <div class="card h-100 border-0 shadow-lg choice-card">
+                <div class="card-body text-center p-5 d-flex flex-column align-items-center">
+                    <div class="icon-circle mb-4 bg-light-dark">
+                        <i class="fas fa-chalkboard-teacher fa-3x text-dark"></i>
+                    </div>
+                    <h3 class="font-weight-800 mb-3 text-dark">Staff Login</h3>
+                    <p class="text-muted mb-4">Authorized access for faculty to post and manage notices.</p>
+                    <a href="{% url 'accounts:staff_login' %}" class="btn btn-dark btn-block py-3 font-weight-bold rounded-pill mt-auto shadow-sm">
+                        STAFF LOGIN
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4 mb-4 animate-up" style="animation-delay: 0.3s;">
+            <div class="card h-100 border-0 shadow-lg choice-card">
+                <div class="card-body text-center p-5 d-flex flex-column align-items-center">
+                    <div class="icon-circle mb-4 bg-light-danger">
+                        <i class="fas fa-user-shield fa-3x" style="color: #6f42c1;"></i>
+                    </div>
+                    <h3 class="font-weight-800 mb-3 text-dark">Admin Login</h3>
+                    <p class="text-muted mb-4">Administrative access for system management and approval.</p>
+                    
+                    <a href="/admin/" class="btn btn-block py-3 font-weight-bold rounded-pill mt-auto shadow-sm text-white" 
+                       style="background-color: #241441; border: none;">
+                        ADMIN LOGIN
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* Custom Animations & Styles for this page */
+    .animate-up { 
+        animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+        opacity: 0; 
+        transform: translateY(30px);
+    }
+    
+    @keyframes fadeInUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .choice-card {
+        border-radius: 30px !important;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .choice-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+    }
+
+    .icon-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-light-blue { background-color: #e3f2fd; }
+    .bg-light-dark { background-color: #e9ecef; }
+    .bg-light-danger { background-color: #f3e5f5; } /* Light purple for Admin */
+</style>
+{% endblock %}

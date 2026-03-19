@@ -1,0 +1,56 @@
+{% extends 'notices/base.html' %}
+
+{% block content %}
+<style>
+    /* Custom styling for archive visibility */
+    .archive-header {
+        color: #ffffff; /* Bright white for the main title */
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .archive-card {
+        transition: transform 0.2s, opacity 0.2s;
+        /* Removing the heavy dimming to make it readable */
+        opacity: 0.9 !important; 
+    }
+    
+    .archive-card:hover {
+        opacity: 1 !important;
+        transform: translateY(-5px);
+    }
+
+    .archive-title {
+        color: #f8f9fa !important; /* High contrast off-white */
+        font-weight: 600;
+    }
+
+    .archive-date {
+        color: #a0aec0 !important; /* Lighter grey for meta text */
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="archive-header"><i class="fas fa-archive mr-2"></i> Historical Archive</h2>
+        <a href="{% url 'notices:home' %}" class="btn btn-outline-light btn-sm">Back to Live Board</a>
+    </div>
+
+    <div class="row">
+        {% for notice in archived_notices %}
+            <div class="col-md-6 col-lg-4 mb-4 archive-card">
+                <div class="card h-100 bg-dark border-secondary shadow">
+                    <div class="card-body">
+                        <h5 class="card-title archive-title">{{ notice.title }}</h5>
+                        <p class="small archive-date">Expired on: {{ notice.expires_at|date:"M d, Y" }}</p>
+                        <a href="{% url 'notices:notice_page' notice.id %}" class="btn btn-sm btn-secondary">View Record</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-white">The archive is currently empty.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
